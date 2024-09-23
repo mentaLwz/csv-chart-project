@@ -85,7 +85,7 @@ export default function CSVUploaderAndChart() {
         data: chartData.map(row => {
           const coreData = row[process]
           if (coreData) {
-            return Object.values(coreData).reduce((sum, time) => sum + time, 0)
+            return Object.values(coreData).reduce((sum, time) => (sum as number) + (time as number), 0)
           }
           return 0
         }),
@@ -193,7 +193,7 @@ export default function CSVUploaderAndChart() {
           data: processes.map(process => {
             const coreData = instanceData[process]
             if (coreData) {
-              return Object.values(coreData).reduce((sum, time) => sum + time, 0)
+              return Object.values(coreData).reduce((sum, time) => (sum as number) + (time as number), 0)
             }
             return 0
           })
@@ -223,7 +223,7 @@ export default function CSVUploaderAndChart() {
       if (coreData) {
         return {
           name: process,
-          value: Object.values(coreData).reduce((sum, time) => sum + time, 0)
+          value: Object.values(coreData).reduce((sum, time) => (sum as number) + (time as number), 0)
         }
       }
       return {
