@@ -6,19 +6,31 @@ import ReactECharts from 'echarts-for-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+interface AggregatedData {
+  instanceId: string;
+  [processName: string]: { [cpuCore: string]: number } | string;
+}
+
+interface PieChartData {
+  processName: string;
+}
+
+interface EChartsClickParams {
+  seriesName: string;
+  // Add other properties if needed
+}
+
 export default function CSVUploaderAndChart() {
-  const [chartData, setChartData] = useState<any[]>([])
-  const [columns, setColumns] = useState<string[]>([])
-  const [pieChartData, setPieChartData] = useState<{ processName: string } | null>(null)
+  const [chartData, setChartData] = useState<AggregatedData[]>([])
+  const [pieChartData, setPieChartData] = useState<PieChartData | null>(null)
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null)
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       Papa.parse(file, {
-        complete: (result) => {
+        complete: (result: Papa.ParseResult<string[]>) => {
           const parsedData = result.data as string[][]
-          setColumns(parsedData[0])
           const aggregatedData = aggregateData(parsedData.slice(1))
           setChartData(aggregatedData)
         },
@@ -27,29 +39,29 @@ export default function CSVUploaderAndChart() {
     }
   }
 
-  const aggregateData = (data: string[][]) => {
-    const instanceMap: { [key: string]: { [key: string]: { [key: string]: number } } } = {}
+  const aggregateData = (data: string[][]): AggregatedData[] => {
+    const instanceMap: { [key: string]: { [key: string]: { [key: string]: number } } } = {};
 
     data.forEach(row => {
-      const instanceId = row[0]
-      const processName = row[1]
-      const cpuCore = row[3]
-      const cpuTime = parseFloat(row[4])
+      const instanceId = row[0];
+      const processName = row[1];
+      const cpuCore = row[3];
+      const cpuTime = parseFloat(row[4]);
 
       if (!instanceMap[instanceId]) {
-        instanceMap[instanceId] = {}
+        instanceMap[instanceId] = {};
       }
       if (!instanceMap[instanceId][processName]) {
-        instanceMap[instanceId][processName] = {}
+        instanceMap[instanceId][processName] = {};
       }
-      instanceMap[instanceId][processName][cpuCore] = cpuTime
-    })
+      instanceMap[instanceId][processName][cpuCore] = cpuTime;
+    });
 
     return Object.keys(instanceMap).map(instanceId => ({
       instanceId,
       ...instanceMap[instanceId]
-    }))
-  }
+    }));
+  };
 
   const getChartOption = () => {
     const allProcesses = new Set<string>()
@@ -101,7 +113,7 @@ export default function CSVUploaderAndChart() {
             color: '#ff7f50'
           }
         },
-        onClick: (params: any) => {
+        onClick: (params: EChartsClickParams) => {
           console.log('Clicked bar:', params)
           const processName = params.seriesName
           setPieChartData({ processName })
@@ -282,7 +294,7 @@ export default function CSVUploaderAndChart() {
             option={getChartOption()}
             style={{ height: '400px', width: '100%' }}
             onEvents={{
-              click: (params: any) => {
+              click: (params: EChartsClickParams) => {
                 console.log('Chart clicked:', params)
                 const processName = params.seriesName
                 setPieChartData({ processName })
